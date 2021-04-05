@@ -12,7 +12,7 @@ const conn = mysql.createConnection({
     database: "email_template"
 });
 
-conn.connect((err) => {
-    if(err) throw err;
+// conn.connect((err) => {
+//     if(err) throw err;
     app.listen(port, () => console.log(`Connected to database`));
-});
+// });
