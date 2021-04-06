@@ -5,6 +5,11 @@ const {
     login,
     createUser
 } = require("../controllers/user-controller");
+const { 
+    body,
+    validationResult } = require('express-validator');
+
+
 const router = express.Router();
 
 // Get User
@@ -23,6 +28,19 @@ router.post("/login", login);
 router.patch("/update/:userId", () => {});
 
 // Create user
-router.post("/create", createUser);
+router.post(
+    "/create",
+    body("email").isEmail().normalizeEmail(),
+    body("password").isLength({ min: 8, max: 20 }),
+    body("mobile").isLength({ min: 10, max: 13 }),
+    (req, res) => {
+        const errors = validationResult(req);
+
+        if(!errors.isEmpty()) {
+            res.json({ isValidationError: true, errors: errors.array() });
+        }
+
+        createUser(req, res)
+    });
 
 module.exports = router;
