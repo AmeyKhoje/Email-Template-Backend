@@ -13,7 +13,7 @@ const {
 const router = express.Router();
 
 // Get User
-router.get("/:userId", getUserById);
+router.get("/single-user/:userId", getUserById);
 
 // Delete user
 router.get("/delete/:userId", deleteUser);
