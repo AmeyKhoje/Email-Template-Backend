@@ -1,16 +1,14 @@
 const { conn } = require("./databaseConnection");
 
-const checkIfUserExist = (email, mobile) => {
-    let returnData = {};
-    if(email && mobile) {
-        let data;
+const checkIfUserExist = async (email, mobile, callback) => {
+    return new Promise((resolve, reject) => {
         conn.query(`SELECT * FROM users WHERE email='${email}' AND mobile=${mobile}`, (error, result) => {
-            data = result
+            if(error) {
+                reject({ isError: error });
+            }
+            resolve({ isError: error, result: result[0] ? result[0] : null });
         })
-        return data
-    }
-
-    
+    })
 };
 
 exports.checkIfUserExist = checkIfUserExist;

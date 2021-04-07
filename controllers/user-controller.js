@@ -69,23 +69,41 @@ const createUser = async (req, res, next) => {
         designation: req.body.designation
     };
 
-    const isUser = checkIfUserExist(req.body.email, req.body.mobile);
+    const isUser = await checkIfUserExist(req.body.email, req.body.mobile);
 
-    console.log("isUser", isUser);
-
-    conn.query(
-        'INSERT INTO users SET ?', data,
-            (error, result) => {
-                if(error) {
-                    console.log(error);
-                }
-                else {
-                    res.json({
-                        data: result
-                    })
-                }
-            }
-    )
+    if(isUser.isError) {
+        res.json({
+            isError: true,
+            message: "Error occurred while checking user. Please try after some time."
+        });
+    }
+    else {
+        if(!isUser.result) {
+            conn.query(
+                'INSERT INTO users SET ?', data,
+                    (error, result) => {
+                        if(error) {
+                            console.log(error);
+                        }
+                        else {
+                            res.json({
+                                message: "User created successfully.",
+                                userCreated: true,
+                                data: result,
+                                isError: false
+                            });
+                        }
+                    }
+            );
+        }
+        if(isUser.result) {
+            res.json({
+                message: "User already registered.",
+                userCreated: false,
+                isError: false
+            });
+        }
+    }
 };
 
 const getUserById = async (req, res, next) => {};
