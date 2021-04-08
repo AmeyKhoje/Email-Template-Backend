@@ -2,9 +2,14 @@ const express = require("express");
 const mysql = require("mysql");
 const { conn } = require("./helpers/databaseConnection");
 const userRoutes = require("./routes/user-routes");
+const Email = require("email-templates");
+const mailer = require("nodemailer");
+const dotEnv = require("dotenv");
+const { emailTransport, getMailConfig } = require("./helpers/mailConfig");
 
 const app = express();
 const port = 3000;
+dotEnv.config();
 
 app.use(express.json())
 
@@ -17,19 +22,9 @@ app.use((req, res, next) => {
 
 app.get('/', (req, res) => res.send('Hello Amey!'));
 
-// const conn = mysql.createConnection({
-//     host: "localhost",
-//     user: "root",
-//     password: "",
-//     database: "email_template"
-// });
-
 conn.connect((err) => {
     if(err) throw err;
     app.listen(port, () => {
         console.log(`Connected to database`);
-        // conn.query("select * from users", (err, data) => {
-        //     console.log(data);
-        // })
     });
 });

@@ -1,5 +1,9 @@
 const { conn } = require("../helpers/databaseConnection");
 const { checkIfUserExist } = require("../helpers/databaseFuctions");
+const { sendEmail } = require("../helpers/emailClient");
+const dotEnv = require("dotenv");
+
+dotEnv.config();
 
 const login = async (req, res, next) => {
     const {
@@ -51,6 +55,10 @@ const login = async (req, res, next) => {
 };
 
 const createUser = async (req, res, next) => {
+    console.log( process.env.HOST,
+        process.env.USERNAME,
+        process.env.PASSWORD,
+        process.env.DATABASE);
     const data = {
         email: req.body.email,
         first_name: req.body.first_name,
@@ -63,7 +71,8 @@ const createUser = async (req, res, next) => {
         created_at: req.body.created_at,
         photo: req.body.photo,
         password: req.body.password,
-        designation: req.body.designation
+        designation: req.body.designation,
+        email_sent: null
     };
 
     const isUser = await checkIfUserExist(req.body.email, req.body.mobile);
@@ -78,17 +87,32 @@ const createUser = async (req, res, next) => {
         if(!isUser.result) {
             conn.query(
                 'INSERT INTO users SET ?', data,
-                    (error, result) => {
+                    async (error, result) => {
                         if(error) {
                             console.log(error);
                         }
                         else {
+                            const mailConfig = {
+                                to: data.email,
+                                subject: "Welcome to Email Template",
+                                html: `
+                                    <div>
+                                        <h3>Welcome ${data.first_name} ${data.last_name}<h3>
+                                        <span>
+                                            This is welcome email. We hope you will like this platform.
+                                        </span>
+                                    </div>
+                                `
+                            }
+                            await sendEmail(mailConfig);
+
                             res.json({
                                 message: "User created successfully.",
                                 userCreated: true,
                                 data: result,
                                 isError: false
                             });
+                            
                         }
                     }
             );
