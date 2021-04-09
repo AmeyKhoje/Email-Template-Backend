@@ -1,5 +1,5 @@
 const { conn } = require("../helpers/databaseConnection");
-const { checkIfUserExist } = require("../helpers/databaseFuctions");
+const { checkIfUserExist, getRoleByValue } = require("../helpers/databaseFuctions");
 const { sendEmail } = require("../helpers/emailClient");
 const dotEnv = require("dotenv");
 
@@ -55,17 +55,13 @@ const login = async (req, res, next) => {
 };
 
 const createUser = async (req, res, next) => {
-    console.log( process.env.HOST,
-        process.env.USERNAME,
-        process.env.PASSWORD,
-        process.env.DATABASE);
     const data = {
         email: req.body.email,
         first_name: req.body.first_name,
         last_name: req.body.last_name,
         mobile: req.body.mobile,
         secondary_contact: req.body.secondary_contact,
-        role_id: req.body.role_id,
+        role_id: null,
         class: req.body.class_of_studying,
         year_of_adm: req.body.year_of_adm,
         created_at: req.body.created_at,
@@ -74,6 +70,8 @@ const createUser = async (req, res, next) => {
         designation: req.body.designation,
         email_sent: null
     };
+
+    const role_value = req.body.role_value
 
     const isUser = await checkIfUserExist(req.body.email, req.body.mobile);
 
@@ -85,37 +83,59 @@ const createUser = async (req, res, next) => {
     }
     else {
         if(!isUser.result) {
-            conn.query(
-                'INSERT INTO users SET ?', data,
-                    async (error, result) => {
-                        if(error) {
-                            console.log(error);
-                        }
-                        else {
-                            const mailConfig = {
-                                to: data.email,
-                                subject: "Welcome to Email Template",
-                                html: `
-                                    <div>
-                                        <h3>Welcome ${data.first_name} ${data.last_name}<h3>
-                                        <span>
-                                            This is welcome email. We hope you will like this platform.
-                                        </span>
-                                    </div>
-                                `
-                            }
-                            await sendEmail(mailConfig);
-
-                            res.json({
-                                message: "User created successfully.",
-                                userCreated: true,
-                                data: result,
-                                isError: false
-                            });
-                            
-                        }
+            const role = await getRoleByValue(role_value);
+            if(role.isError) {
+                res.json({
+                    isError: true,
+                    message: "Error occurred while finding role. Please try after some time."
+                });
+            }
+            else {
+                if(!role.result && !role.isError) {
+                    res.json({
+                        isError: true,
+                        message: "You selected wrong role. We don't have this role."
+                    });
+                    return;
+                }
+                if(role.result && !role.isError) {
+                    const finalData = {
+                        ...data,
+                        role_id: role.result.id
                     }
-            );
+                    console.log(finalData);
+                    conn.query(
+                        'INSERT INTO users SET ?', finalData,
+                            async (error, result) => {
+                                if(error) {
+                                    console.log(error);
+                                }
+                                else {
+                                    const mailConfig = {
+                                        to: data.email,
+                                        subject: "Welcome to Email Template",
+                                        html: `
+                                            <div>
+                                                <h3>Welcome ${data.first_name} ${data.last_name}<h3>
+                                                <span>
+                                                    This is welcome email. We hope you will like this platform.
+                                                </span>
+                                            </div>
+                                        `
+                                    }
+                                    await sendEmail(mailConfig);
+                                    res.json({
+                                        message: "User created successfully.",
+                                        userCreated: true,
+                                        data: result,
+                                        isError: false
+                                    });
+                                    
+                                }
+                            }
+                    );
+                }
+            }
         }
         if(isUser.result) {
             res.json({
