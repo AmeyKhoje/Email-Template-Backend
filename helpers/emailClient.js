@@ -10,7 +10,8 @@ const sendEmail = async (config) => {
         to: config.to,
         subject: config.subject,
         generateTextFromHTML: true,
-        html: config.html
+        html: config.html,
+        text: config.text
     };
     return new Promise((resolve, reject) => {
         emailTransport.sendMail(configs, (error, response) => {
