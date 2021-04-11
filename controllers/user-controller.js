@@ -72,6 +72,7 @@ const createUser = async (req, res, next) => {
     };
 
     const role_value = req.body.role_value
+    
 
     const isUser = await checkIfUserExist(req.body.email, req.body.mobile);
 
