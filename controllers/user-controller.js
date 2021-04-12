@@ -72,7 +72,6 @@ const createUser = async (req, res, next) => {
     };
 
     const role_value = req.body.role_value
-    
 
     const isUser = await checkIfUserExist(req.body.email, req.body.mobile);
 
@@ -104,7 +103,6 @@ const createUser = async (req, res, next) => {
                         ...data,
                         role_id: role.result.id
                     }
-                    console.log(finalData);
                     conn.query(
                         'INSERT INTO users SET ?', finalData,
                             async (error, result) => {
@@ -123,15 +121,21 @@ const createUser = async (req, res, next) => {
                                                 </span>
                                             </div>
                                         `
-                                    }
+                                    };
+
                                     await sendEmail(mailConfig);
-                                    res.json({
-                                        message: "User created successfully.",
-                                        userCreated: true,
-                                        data: result,
-                                        isError: false
-                                    });
-                                    
+
+                                    conn.query(`SELECT id, first_name, last_name, email, mobile, secondary_contact, role_id, class, year_of_adm, created_at, photo, designation from users where email='${finalData.email}'`, (error, response) => {
+                                        if(error) {
+                                            console.log(error);
+                                        }
+                                        res.json({
+                                            message: "User created successfully.",
+                                            userCreated: true,
+                                            data: response[0],
+                                            isError: false
+                                        });
+                                    })
                                 }
                             }
                     );
@@ -152,7 +156,7 @@ const getUserById = async (req, res, next) => {
     const id = req.params.userId;
 
     try {
-        conn.query(`SELECT id, email, first_name, last_name, mobile, password, secondary_contact, role_id, class, year_of_adm, created_at, photo, designation FROM users WHERE id='${id}'`, (error, result) => {
+        conn.query(`SELECT id, first_name, last_name, email, mobile, secondary_contact, role_id, class, year_of_adm, created_at, photo, designation from users where id='${id}'`, (error, result) => {
             if(error) {
                 res.json({ 
                     message: "Request failed.",
