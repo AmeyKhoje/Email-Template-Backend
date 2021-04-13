@@ -13,7 +13,7 @@ const login = async (req, res, next) => {
     } = req.body;
 
     try {
-        conn.query(`SELECT id, email, mobile, password FROM users WHERE email='${email}' AND mobile=${mobile}`, (error, result) => {
+        conn.query(`SELECT id, first_name, last_name, email, mobile, secondary_contact, role_id, class, year_of_adm, created_at, photo, designation, password from users where email='${email}' AND mobile=${mobile}`, (error, result) => {
             verifyUser(result[0]);
         });
     }
@@ -33,15 +33,19 @@ const login = async (req, res, next) => {
                 userExist: false,
                 loginSuccess: false,
                 errorOccurred: false });
+                return;
         }
         if(data) {
             if(data.password === password) {
+                let dataToSend =  data;
+                delete dataToSend['password'];
                 res.json({ 
                     message: "Logged In",
                     userExist: true,
                     loginSuccess: true,
                     errorOccurred: false,
-                    data: { email: data.email, id: data.id, mobile: data.mobile } });
+                    data: dataToSend });
+                    return;
             }
             if(data.password !== password) {
                 res.json({ 
@@ -49,6 +53,7 @@ const login = async (req, res, next) => {
                     userExist: true,
                     errorOccurred: false,
                     loginSuccess: false });
+                    return;
             }
         }
     }
