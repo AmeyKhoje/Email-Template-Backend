@@ -3,9 +3,14 @@ const dotEnv = require("dotenv");
 const fs = require("fs");
 const path = require("path");
 
+// ? Configure DotEnv
 dotEnv.config();
 
-const conn = mysql.createConnection({
+/*
+    ? CreatePool method on mysql package
+    ? Connecting to database for multiple requests
+*/
+const conn = mysql.createPool({
     host: process.env.HOST,
     user: process.env.USER_NAME,
     password: process.env.PASSWORD,
@@ -15,4 +20,3 @@ const conn = mysql.createConnection({
 });
 
 exports.conn = conn;
-// exports.conn2 = conn2;

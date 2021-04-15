@@ -13,7 +13,9 @@ const login = async (req, res, next) => {
     } = req.body;
 
     try {
+        // ? Select user data from database for entered details
         conn.query(`SELECT id, first_name, last_name, email, mobile, secondary_contact, role_id, class, year_of_adm, created_at, photo, designation, password from users where email='${email}' AND mobile=${mobile}`, (error, result) => {
+            // ? Verify results
             verifyUser(result[0]);
         });
     }
@@ -60,6 +62,7 @@ const login = async (req, res, next) => {
 };
 
 const createUser = async (req, res, next) => {
+    // ? To register user
     const data = {
         email: req.body.email,
         first_name: req.body.first_name,
@@ -78,6 +81,7 @@ const createUser = async (req, res, next) => {
 
     const role_value = req.body.role_value
 
+    // ? Check if user exist
     const isUser = await checkIfUserExist(req.body.email, req.body.mobile);
 
     if(isUser.isError) {
@@ -128,8 +132,10 @@ const createUser = async (req, res, next) => {
                                         `
                                     };
 
+                                    // ? Send email after successful registration
                                     await sendEmail(mailConfig);
 
+                                    // ? Send user details
                                     conn.query(`SELECT id, first_name, last_name, email, mobile, secondary_contact, role_id, class, year_of_adm, created_at, photo, designation from users where email='${finalData.email}'`, (error, response) => {
                                         if(error) {
                                             console.log(error);
@@ -158,6 +164,7 @@ const createUser = async (req, res, next) => {
 };
 
 const getUserById = async (req, res, next) => {
+    // ? This function gets user by id
     const id = req.params.userId;
 
     try {

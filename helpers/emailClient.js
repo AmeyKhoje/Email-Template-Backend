@@ -1,10 +1,12 @@
-const mailer = require("nodemailer");
-const dotEnv = require("dotenv");
 const { emailTransport } = require("./mailConfig");
 
 // dotEnv.config()
-
 const sendEmail = async (config) => {
+    /* 
+        ? This function sends email
+        ? Accepts email config as parameters
+        ? Returns new Promise which send response of email
+    */
     let configs = {
         from: process.env.EMAIL_MY_EMAIL,
         to: config.to,
@@ -16,11 +18,11 @@ const sendEmail = async (config) => {
     return new Promise((resolve, reject) => {
         emailTransport.sendMail(configs, (error, response) => {
             if(error) {
-                console.log(error);
+                // ? Email not sent(FAILED)
                 reject(false)
             }
             if(response) {
-                console.log(response);
+                // ? Email sent successfully
                 resolve(true)
             }
         })

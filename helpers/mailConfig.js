@@ -12,6 +12,7 @@ const generator = xoauth2.createXOAuth2Generator({
         accessToken: process.env.EMAIL_ACCESS_TOKEN
 })
 
+// ? EmailTransport is configuration of transport to send emails
 const emailTransport = mailer.createTransport({
     service: "gmail",
     auth: {

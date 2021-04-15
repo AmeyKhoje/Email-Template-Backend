@@ -12,22 +12,22 @@ const {
 
 const router = express.Router();
 
-// Get User
+// ? Get User
 router.get("/single-user/:userId", getUserById);
 
-// Delete user
+// ? Delete user
 router.get("/delete/:userId", deleteUser);
 
-// Get all records from students as well as faculty
+// ? Get all records from students as well as faculty
 router.get("/get-multiple/:type", () => {});
 
-// Login service
+// ? Login service
 router.post("/login", login);
 
-// Update user
+// ? Update user
 router.patch("/update/:userId", () => {});
 
-// Create user
+// ? Create user
 router.post(
     "/create",
     body("email").isEmail().normalizeEmail(),
