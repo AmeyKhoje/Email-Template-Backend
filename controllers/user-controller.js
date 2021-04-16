@@ -2,6 +2,8 @@ const { conn } = require("../helpers/databaseConnection");
 const { checkIfUserExist, getRoleByValue } = require("../helpers/databaseFuctions");
 const { sendEmail } = require("../helpers/emailClient");
 const dotEnv = require("dotenv");
+const { sign } = require("jsonwebtoken");
+const { hash, compare } = require("bcryptjs");
 
 dotEnv.config();
 
@@ -14,9 +16,9 @@ const login = async (req, res, next) => {
 
     try {
         // ? Select user data from database for entered details
-        conn.query(`SELECT id, first_name, last_name, email, mobile, secondary_contact, role_id, class, year_of_adm, created_at, photo, designation, password from users where email='${email}' AND mobile=${mobile}`, (error, result) => {
+        conn.query(`SELECT id, first_name, last_name, email, mobile, secondary_contact, role_id, class, year_of_adm, created_at, photo, designation, password from users where email='${email}' AND mobile=${mobile}`, async (error, result) => {
             // ? Verify results
-            verifyUser(result[0]);
+            await verifyUser(result[0]);
         });
     }
     catch(err) {
@@ -28,7 +30,7 @@ const login = async (req, res, next) => {
         return;
     }
 
-    const verifyUser = data => {
+    const verifyUser = async data => {
         if(!data) {
             res.json({ 
                 message: "No user found for provided data. Please register first",
@@ -38,18 +40,26 @@ const login = async (req, res, next) => {
                 return;
         }
         if(data) {
-            if(data.password === password) {
-                let dataToSend =  data;
-                delete dataToSend['password'];
-                res.json({ 
-                    message: "Logged In",
-                    userExist: true,
-                    loginSuccess: true,
-                    errorOccurred: false,
-                    data: dataToSend });
-                    return;
+            let isValidPassword = false;
+            try {
+                compare(password, data.password).then(res => {
+                    console.log(res);
+                })
+                .catch(err => {
+                    console.log(err);
+                })
+                console.log(isValidPassword, password, data.password);
             }
-            if(data.password !== password) {
+            catch(err) {
+                res.json({
+                    message: "Something went wrong in comparing password",
+                    userExist: true,
+                    loginSuccess: false,
+                    errorOccurred: false,
+                });
+                return;
+            }
+            if(!isValidPassword) {
                 res.json({ 
                     message: "Please enter valid credentials",
                     userExist: true,
@@ -57,6 +67,31 @@ const login = async (req, res, next) => {
                     loginSuccess: false });
                     return;
             }
+            let dataToSend =  data;
+                delete dataToSend['password'];
+                let token;
+                try {
+                    token = sign({ 
+                                userId: dataToSend.id, 
+                                email: dataToSend.email 
+                            }, 'amey@99**', { expiresIn: "2 days", notBefore: "1 day",  })
+                }
+                catch(err) {
+                    res.json({
+                        message: "Failed to assign token",
+                        userExist: true,
+                        loginSuccess: false,
+                        errorOccurred: false,
+                    });
+                }
+                res.json({ 
+                    message: "Logged In",
+                    userExist: true,
+                    loginSuccess: true,
+                    errorOccurred: false,
+                    token,
+                    data: dataToSend });
+                    return;
         }
     }
 };
@@ -108,10 +143,21 @@ const createUser = async (req, res, next) => {
                     return;
                 }
                 if(role.result && !role.isError) {
+                    let hashedPassword;
+
+                    try {
+                        hashedPassword = await hash(data.password, 12);
+                    }
+                    catch(err) {
+                        console.log(err);
+                    }
+
                     const finalData = {
                         ...data,
-                        role_id: role.result.id
+                        role_id: role.result.id,
+                        password: hashedPassword
                     }
+
                     conn.query(
                         'INSERT INTO users SET ?', finalData,
                             async (error, result) => {
@@ -136,14 +182,30 @@ const createUser = async (req, res, next) => {
                                     await sendEmail(mailConfig);
 
                                     // ? Send user details
-                                    conn.query(`SELECT id, first_name, last_name, email, mobile, secondary_contact, role_id, class, year_of_adm, created_at, photo, designation from users where email='${finalData.email}'`, (error, response) => {
+                                    conn.query(`SELECT id, first_name, last_name, email, mobile, secondary_contact, role_id, class, year_of_adm, created_at, photo, designation, password from users where email='${finalData.email}'`, (error, response) => {
                                         if(error) {
                                             console.log(error);
+                                        }
+                                        let token;
+                                        try {
+                                            token = sign({ 
+                                                        userId: response[0].id, 
+                                                        email: response[0].email 
+                                                    }, 'amey@99**', { expiresIn: "2 days", notBefore: "1 day" })
+                                        }
+                                        catch(err) {
+                                            console.log("JSON Web Token Error");
                                         }
                                         res.json({
                                             message: "User created successfully.",
                                             userCreated: true,
-                                            data: response[0],
+                                            data: {
+                                                userId: response[0].id,
+                                                email: response[0].email,
+                                                password: response[0].password,
+                                                mobile: response[0].mobile
+                                            },
+                                            token,
                                             isError: false
                                         });
                                     })

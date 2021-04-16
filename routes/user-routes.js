@@ -8,12 +8,13 @@ const {
 const { 
     body,
     validationResult } = require('express-validator');
+const { checkAuth } = require("../middlewares/check-auth");
 
 
 const router = express.Router();
 
 // ? Get User
-router.get("/single-user/:userId", getUserById);
+router.get("/single-user/:userId",checkAuth, getUserById);
 
 // ? Delete user
 router.get("/delete/:userId", deleteUser);
@@ -41,6 +42,7 @@ router.post(
         }
 
         createUser(req, res)
-    });
+    }
+);
 
 module.exports = router;
