@@ -1,14 +1,14 @@
 const { emailTransport } = require("./mailConfig");
 
 // dotEnv.config()
-const sendEmail = async (config) => {
+const sendEmail = async (config, email) => {
     /* 
         ? This function sends email
         ? Accepts email config as parameters
         ? Returns new Promise which send response of email
     */
     let configs = {
-        from: process.env.EMAIL_MY_EMAIL,
+        from: email,
         to: config.to,
         subject: config.subject,
         generateTextFromHTML: true,

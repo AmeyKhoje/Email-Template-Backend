@@ -14,13 +14,13 @@ const { checkAuth } = require("../middlewares/check-auth");
 const router = express.Router();
 
 // ? Get User
-router.get("/single-user/:userId",checkAuth, getUserById);
+router.get("/single-user", checkAuth, getUserById);
 
 // ? Delete user
-router.get("/delete/:userId", deleteUser);
+router.delete("/delete/self", checkAuth, deleteUser);
 
 // ? Get all records from students as well as faculty
-router.get("/get-multiple/:type", () => {});
+router.get("/get-multiple/:type/all", () => {});
 
 // ? Login service
 router.post("/login", login);

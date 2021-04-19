@@ -3,6 +3,7 @@ const { sendEmail } = require("../helpers/emailClient");
 
 const sendEmails = async (req, res, next) => {
     const { recipients, title, message } = req.body;
+    const userInfoFromHeaders = req.userData;
 
     const mailConfig = {
         to: recipients,
@@ -10,24 +11,24 @@ const sendEmails = async (req, res, next) => {
         text: message
     }
 
-    const sentEmail = await sendEmail(mailConfig);
+    const sentEmail = await sendEmail(mailConfig, userInfoFromHeaders.email);
     if(!sentEmail) {
         res.json({
             isError: true,
             message: "Failed to send email. Try after some time."
         })
     }
-    await storeEmails(recipients, mailConfig.subject, mailConfig.text);
+    await storeEmails(recipients, mailConfig.subject, mailConfig.text, userInfoFromHeaders.email);
     res.json({
         isError: false,
         message: "Email sent successfully."
     });
 };
 
-const storeEmails = async (data, title, text) => {
+const storeEmails = async (data, title, text, sender) => {
     const recipientsString = data.toString();
     const dataToStore = {
-        sender: "ameykhoje@gmail.com",
+        sender: sender,
         receivers: recipientsString,
         title: title,
         message: text
@@ -45,4 +46,37 @@ const storeEmails = async (data, title, text) => {
     });
 };
 
+const getAllEmailsSentByMe = (req, res, next) => {
+    let userInfoFromHeaders = req.userData;
+    if(userInfoFromHeaders) {
+        try {
+            conn.query(`SELECT * from emails where sender='${userInfoFromHeaders.email}'`, (error, result) => {
+                if(error) {
+                    res.json({
+                        isError: true,
+                        message: "Failed to get emails."
+                    });
+                    return;
+                }
+                if(result) {
+                    res.json({
+                        isError: false,
+                        message: "Emails found successfully",
+                        data: result
+                    });
+                    return;
+                }
+            })
+        }
+        catch(error) {
+            res.json({
+                isError: true,
+                message: "Failed to get emails."
+            });
+            return;
+        }
+    }
+}
+
 exports.sendEmails = sendEmails;
+exports.getAllEmailsSentByMe = getAllEmailsSentByMe;

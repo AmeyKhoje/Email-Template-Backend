@@ -2,8 +2,8 @@ const { conn } = require("../helpers/databaseConnection");
 const { checkIfUserExist, getRoleByValue } = require("../helpers/databaseFuctions");
 const { sendEmail } = require("../helpers/emailClient");
 const dotEnv = require("dotenv");
-const { sign } = require("jsonwebtoken");
-const { hash, compare } = require("bcryptjs");
+const { sign, verify } = require("jsonwebtoken");
+const { hash, compare, compareSync } = require("bcryptjs");
 
 dotEnv.config();
 
@@ -40,26 +40,7 @@ const login = async (req, res, next) => {
                 return;
         }
         if(data) {
-            let isValidPassword = false;
-            try {
-                compare(password, data.password).then(res => {
-                    console.log(res);
-                })
-                .catch(err => {
-                    console.log(err);
-                })
-                console.log(isValidPassword, password, data.password);
-            }
-            catch(err) {
-                res.json({
-                    message: "Something went wrong in comparing password",
-                    userExist: true,
-                    loginSuccess: false,
-                    errorOccurred: false,
-                });
-                return;
-            }
-            if(!isValidPassword) {
+            if(password !== data.password) {
                 res.json({ 
                     message: "Please enter valid credentials",
                     userExist: true,
@@ -74,7 +55,7 @@ const login = async (req, res, next) => {
                     token = sign({ 
                                 userId: dataToSend.id, 
                                 email: dataToSend.email 
-                            }, 'amey@99**', { expiresIn: "2 days", notBefore: "1 day",  })
+                            }, 'amey@99**', { expiresIn: "2 days" })
                 }
                 catch(err) {
                     res.json({
@@ -83,6 +64,7 @@ const login = async (req, res, next) => {
                         loginSuccess: false,
                         errorOccurred: false,
                     });
+                    return;
                 }
                 res.json({ 
                     message: "Logged In",
@@ -90,8 +72,13 @@ const login = async (req, res, next) => {
                     loginSuccess: true,
                     errorOccurred: false,
                     token,
-                    data: dataToSend });
-                    return;
+                    data: { 
+                        id: dataToSend.id,
+                        email: dataToSend.email,
+                        mobile: dataToSend.mobile
+                    }
+                });
+                return;
         }
     }
 };
@@ -143,19 +130,9 @@ const createUser = async (req, res, next) => {
                     return;
                 }
                 if(role.result && !role.isError) {
-                    let hashedPassword;
-
-                    try {
-                        hashedPassword = await hash(data.password, 12);
-                    }
-                    catch(err) {
-                        console.log(err);
-                    }
-
                     const finalData = {
                         ...data,
                         role_id: role.result.id,
-                        password: hashedPassword
                     }
 
                     conn.query(
@@ -185,27 +162,26 @@ const createUser = async (req, res, next) => {
                                     conn.query(`SELECT id, first_name, last_name, email, mobile, secondary_contact, role_id, class, year_of_adm, created_at, photo, designation, password from users where email='${finalData.email}'`, (error, response) => {
                                         if(error) {
                                             console.log(error);
+                                            return;
                                         }
-                                        let token;
-                                        try {
-                                            token = sign({ 
-                                                        userId: response[0].id, 
-                                                        email: response[0].email 
-                                                    }, 'amey@99**', { expiresIn: "2 days", notBefore: "1 day" })
-                                        }
-                                        catch(err) {
-                                            console.log("JSON Web Token Error");
-                                        }
+                                        // let token;
+                                        // try {
+                                        //     token = sign({ 
+                                        //                 userId: response[0].id, 
+                                        //                 email: response[0].email 
+                                        //             }, 'amey@99**', { expiresIn: "2 days", notBefore: "1 day" })
+                                        // }
+                                        // catch(err) {
+                                        //     console.log("JSON Web Token Error");
+                                        // }
                                         res.json({
                                             message: "User created successfully.",
                                             userCreated: true,
                                             data: {
                                                 userId: response[0].id,
                                                 email: response[0].email,
-                                                password: response[0].password,
                                                 mobile: response[0].mobile
                                             },
-                                            token,
                                             isError: false
                                         });
                                     })
@@ -227,41 +203,72 @@ const createUser = async (req, res, next) => {
 
 const getUserById = async (req, res, next) => {
     // ? This function gets user by id
-    const id = req.params.userId;
-
-    try {
-        conn.query(`SELECT id, first_name, last_name, email, mobile, secondary_contact, role_id, class, year_of_adm, created_at, photo, designation from users where id='${id}'`, (error, result) => {
-            if(error) {
-                res.json({ 
-                    message: "Request failed.",
-                    userExist: false,
-                    errorOccurred: true });
-            }
-            if(result[0]) {
-                res.json({ 
-                    message: "User found",
-                    userExist: true,
-                    errorOccurred: false,
-                    data: result[0] });
-            }
-            if(!result[0]) {
-                res.json({ 
-                    message: "No user find.",
-                    userExist: false,
-                    errorOccurred: false });
-            }
-        });
+    let userDataFromToken = req.userData;
+    if(userDataFromToken) {
+        try {
+            conn.query(`SELECT id, first_name, last_name, email, mobile, secondary_contact, role_id, class, year_of_adm, created_at, photo, designation from users where id='${userDataFromToken.userId}'`, (error, result) => {
+                if(error) {
+                    res.json({ 
+                        message: "Request failed.",
+                        userExist: false,
+                        errorOccurred: true });
+                }
+                if(result[0]) {
+                    res.json({ 
+                        message: "User found",
+                        userExist: true,
+                        errorOccurred: false,
+                        data: result[0] });
+                }
+                if(!result[0]) {
+                    res.json({ 
+                        message: "No user find.",
+                        userExist: false,
+                        errorOccurred: false });
+                }
+            });
+        }
+        catch(err) {
+            res.json({ 
+                message: "Request failed. Check your internet connection or after sometime",
+                userExist: false,
+                errorOccurred: true });
+            return;
+        }
     }
-    catch(err) {
-        res.json({ 
-            message: "Request failed. Check your internet connection or after sometime",
-            userExist: false,
-            errorOccurred: true });
+
+    
+};
+
+const deleteUser = async (req, res, next) => {
+    let userDataFromToken = req.userData;
+    try {
+        conn.query(`DELETE from users where id='${userDataFromToken.userId}'`, (error, result) => {
+            if(error) {
+                res.json({
+                    isError: true,
+                    message: "Failed to delete user"
+                });
+                return;
+            }
+            if(result) {
+                res.json({
+                    isError: false,
+                    message: "User deleted Successfully",
+                    data: result
+                });
+                return;
+            }
+        })
+    }
+    catch(error) {
+        res.json({
+            isError: true,
+            message: "Failed to delete user"
+        });
         return;
     }
 };
-
-const deleteUser = async (req, res, next) => {};
 
 exports.login = login;
 exports.createUser = createUser;
