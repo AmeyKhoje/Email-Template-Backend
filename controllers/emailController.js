@@ -76,7 +76,36 @@ const getAllEmailsSentByMe = (req, res, next) => {
             return;
         }
     }
-}
+};
+
+const makeEmailStarred = (req, res, next) => {
+    const { id, sender } = req.body;
+    try {
+        conn.query(`UPDATE emails SET starred=true where id='${id}' AND sender='${sender}'`, (error, result) => {
+            if(error) {
+                res.json({
+                    isError: true,
+                    message: "Failed to star email."
+                });
+                return;
+            }
+            if(result) {
+                res.json({
+                    isError: false,
+                    message: "Email starred successfully."
+                });
+                return;
+            }
+        })
+    }
+    catch(error) {
+        res.json({
+            isError: true,
+            message: "Server error."
+        });
+    }
+};
 
 exports.sendEmails = sendEmails;
 exports.getAllEmailsSentByMe = getAllEmailsSentByMe;
+exports.makeEmailStarred = makeEmailStarred;
