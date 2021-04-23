@@ -42,5 +42,17 @@ const getRoleByValue = async (value) => {
     })
 }
 
+const checkIfEmailStarred = async (id, sender) => {
+    return new Promise((resolve, reject) => {
+        conn.query(`SELECT starred FROM emails WHERE id='${id}' AND sender='${sender}'`, (error, result) => {
+            if(error) {
+                reject({ isError: true, error: error })
+            }
+            resolve({ isError: false, result: result ? result[0] : null })
+        })
+    })
+}
+
 exports.checkIfUserExist = checkIfUserExist;
 exports.getRoleByValue = getRoleByValue;
+exports.checkIfEmailStarred = checkIfEmailStarred;

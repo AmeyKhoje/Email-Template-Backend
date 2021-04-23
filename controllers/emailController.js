@@ -1,4 +1,5 @@
 const { conn } = require("../helpers/databaseConnection");
+const { checkIfEmailStarred } = require("../helpers/databaseFuctions");
 const { sendEmail } = require("../helpers/emailClient");
 
 const sendEmails = async (req, res, next) => {
@@ -78,32 +79,68 @@ const getAllEmailsSentByMe = (req, res, next) => {
     }
 };
 
-const makeEmailStarred = (req, res, next) => {
+const makeEmailStarred = async (req, res, next) => {
     const { id, sender } = req.body;
-    try {
-        conn.query(`UPDATE emails SET starred=true where id='${id}' AND sender='${sender}'`, (error, result) => {
-            if(error) {
+    const starredEmail = await checkIfEmailStarred(id, sender);
+
+    if(starredEmail.isError) {
+        return;
+    }
+    if(!starredEmail.isError) {
+        if(starredEmail.result.starred === 1) {
+            try {
+                conn.query(`UPDATE emails SET starred=false where id='${id}' AND sender='${sender}'`, (error, result) => {
+                    if(error) {
+                        res.json({
+                            isError: true,
+                            message: "Failed to star email."
+                        });
+                        return;
+                    }
+                    if(result) {
+                        res.json({
+                            isError: false,
+                            message: "Email starred successfully."
+                        });
+                        return;
+                    }
+                });
+                return;
+            }
+            catch(error) {
                 res.json({
                     isError: true,
-                    message: "Failed to star email."
+                    message: "Server error."
                 });
                 return;
             }
-            if(result) {
-                res.json({
-                    isError: false,
-                    message: "Email starred successfully."
-                });
-                return;
-            }
-        })
+        }
+        try {
+            conn.query(`UPDATE emails SET starred=true where id='${id}' AND sender='${sender}'`, (error, result) => {
+                if(error) {
+                    res.json({
+                        isError: true,
+                        message: "Failed to star email."
+                    });
+                    return;
+                }
+                if(result) {
+                    res.json({
+                        isError: false,
+                        message: "Email starred successfully."
+                    });
+                    return;
+                }
+            })
+        }
+        catch(error) {
+            res.json({
+                isError: true,
+                message: "Server error."
+            });
+        }
     }
-    catch(error) {
-        res.json({
-            isError: true,
-            message: "Server error."
-        });
-    }
+    
 };
 
 exports.sendEmails = sendEmails;
