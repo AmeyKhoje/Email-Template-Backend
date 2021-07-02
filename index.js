@@ -41,7 +41,7 @@ app.use((req, res, next) => {
 // ? Connecting to Database
 conn.connect((error, connection) => {
     if(error) {
-        console.log("Error");
+        console.log("Error", error);
         return;
     }
     console.log("Database Connection Successful");

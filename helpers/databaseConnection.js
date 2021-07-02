@@ -24,6 +24,7 @@ const conn = mysql.createConnection({
     user: process.env.PMA_USER_NAME,
     password: process.env.PMA_PASSWORD,
     database: process.env.PMA_DATABASE,
+    port: 3306
 });
 
 exports.conn = conn;
