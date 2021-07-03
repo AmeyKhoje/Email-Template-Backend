@@ -143,48 +143,57 @@ const makeEmailStarred = async (req, res, next) => {
     
 };
 
-const getAllEmailsReceived = async (req, res, next) => {
-    let userDataFromHeader = req.userData;
-    
-    try {
-        conn.query("SELECT * from emails", (error, result) => {
-            if(error) {
-                res.json({
-                    isError: true,
-                    message: "Failed to get emails"
-                })
-                return;
-            }
-            if(result) {
-                let finalDataToSend = []
-                result.forEach((item, index) => {
-                    let receivers = item.receivers.split(",")
-                    let isThisUserExist = receivers.filter(x => x === "akshayambulkar16@gmail.com")
-                    if(isThisUserExist && isThisUserExist.length > 0) {
-                        finalDataToSend.push(item)
-                    }
-                    else {
-                        return
-                    }
-                })
+const getAllEmailsReceivedByStudent = async (req, res, next) => {
+    // let userDataFromHeader = req.userData;
 
-                res.json({
-                    isError: false,
-                    data: finalDataToSend
-                })
-                return;
-            }
-        })
-    }
-    catch(error) {
-        res.json({
-            isError: true,
-            message: "Server error."
-        });
-    }
+    console.log(req);
+    
+    // try {
+    //     conn.query("SELECT * from emails", (error, result) => {
+    //         if(error) {
+    //             res.json({
+    //                 isError: true,
+    //                 message: "Failed to get emails"
+    //             })
+    //             return;
+    //         }
+    //         if(result) {
+    //             let finalDataToSend = []
+    //             result.forEach((item, index) => {
+    //                 let receivers = item.receivers.split(",")
+    //                 let isThisUserExist = receivers.filter(x => x === "akshayambulkar16@gmail.com")
+    //                 if(isThisUserExist && isThisUserExist.length > 0) {
+    //                     finalDataToSend.push(item)
+    //                 }
+    //                 else {
+    //                     return
+    //                 }
+    //             })
+
+    //             res.json({
+    //                 isError: false,
+    //                 data: finalDataToSend
+    //             })
+    //             return;
+    //         }
+    //     })
+    // }
+    // catch(error) {
+    //     res.json({
+    //         isError: true,
+    //         message: "Server error."
+    //     });
+    // }
 }
+
+const getAllEmailsReceivedByAdmin = async (req, res, next) => {
+    console.log(req);
+}
+
+
 
 exports.sendEmails = sendEmails;
 exports.getAllEmailsSentByMe = getAllEmailsSentByMe;
 exports.makeEmailStarred = makeEmailStarred;
-exports.getAllEmailsReceived = getAllEmailsReceived;
+exports.getAllEmailsReceivedByStudent = getAllEmailsReceivedByStudent;
+exports.getAllEmailsReceivedByAdmin = getAllEmailsReceivedByAdmin;

@@ -53,6 +53,19 @@ const checkIfEmailStarred = async (id, sender) => {
     })
 }
 
+const getUserRoleAndEmail = async (id, email) => {
+    // console.log(id);
+    return new Promise((resolve, reject) => {
+        conn.query(`SELECT id, email, mobile, role_id from users WHERE id=${id}`, (error, result) => {
+            if(error) {
+                reject({ isError: true, error: error })
+            }
+            resolve({ isError: false, result: result ? result[0] : null  })
+        })
+    })
+}
+
 exports.checkIfUserExist = checkIfUserExist;
 exports.getRoleByValue = getRoleByValue;
 exports.checkIfEmailStarred = checkIfEmailStarred;
+exports.getUserRoleAndEmail = getUserRoleAndEmail;
