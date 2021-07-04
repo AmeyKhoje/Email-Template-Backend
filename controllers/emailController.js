@@ -143,57 +143,57 @@ const makeEmailStarred = async (req, res, next) => {
     
 };
 
-const getAllEmailsReceivedByStudent = async (req, res, next) => {
-    // let userDataFromHeader = req.userData;
+const getAllEmailsReceived = async (req, res, next) => {
+    // console.log(req.cookies['userEmail'])
+    const emailId = req.cookies['userEmail'];
 
-    console.log(req);
-    
-    // try {
-    //     conn.query("SELECT * from emails", (error, result) => {
-    //         if(error) {
-    //             res.json({
-    //                 isError: true,
-    //                 message: "Failed to get emails"
-    //             })
-    //             return;
-    //         }
-    //         if(result) {
-    //             let finalDataToSend = []
-    //             result.forEach((item, index) => {
-    //                 let receivers = item.receivers.split(",")
-    //                 let isThisUserExist = receivers.filter(x => x === "akshayambulkar16@gmail.com")
-    //                 if(isThisUserExist && isThisUserExist.length > 0) {
-    //                     finalDataToSend.push(item)
-    //                 }
-    //                 else {
-    //                     return
-    //                 }
-    //             })
+    try {
 
-    //             res.json({
-    //                 isError: false,
-    //                 data: finalDataToSend
-    //             })
-    //             return;
-    //         }
-    //     })
-    // }
-    // catch(error) {
-    //     res.json({
-    //         isError: true,
-    //         message: "Server error."
-    //     });
-    // }
+        conn.query("SELECT * from emails", (error, result) => {
+
+            if(error) {
+                res.json({
+                    isError: true,
+                    message: "Failed to get emails"
+                })
+                return;
+            }
+
+            if(result) {
+                let finalDataToSend = [];
+
+                result.forEach((item, index) => {
+
+                    let receivers = item.receivers.split(",")
+                    let isThisUserExist = receivers.filter(x => x === emailId)
+
+                    if(isThisUserExist && isThisUserExist.length > 0) {
+                        finalDataToSend.push(item)
+                    }
+                    
+                    else {
+                        return
+                    }
+                })
+
+                res.json({
+                    isError: false,
+                    data: finalDataToSend
+                })
+                return;
+            }
+
+        })
+    }
+    catch(error) {
+        res.json({
+            isError: true,
+            message: "Server error."
+        });
+    }
 }
-
-const getAllEmailsReceivedByAdmin = async (req, res, next) => {
-    console.log(req);
-}
-
-
 
 exports.sendEmails = sendEmails;
 exports.getAllEmailsSentByMe = getAllEmailsSentByMe;
 exports.makeEmailStarred = makeEmailStarred;
-exports.getAllEmailsReceivedByStudent = getAllEmailsReceivedByStudent;
-exports.getAllEmailsReceivedByAdmin = getAllEmailsReceivedByAdmin;
+exports.getAllEmailsReceived = getAllEmailsReceived;

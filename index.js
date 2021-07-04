@@ -3,6 +3,7 @@ const userRoutes = require("./routes/user-routes");
 const emailRoutes = require("./routes/email-routes");
 const dotEnv = require("dotenv");
 const { conn } = require("./helpers/databaseConnection");
+const cookieParser = require("cookie-parser");
 
 // ? Init express app
 const app = express();
@@ -23,6 +24,7 @@ app.use((req, res, next) => {
 
 // ? Parsing request through middleware
 app.use(express.json());
+app.use(cookieParser())
 
 // ? Route middleware
 app.use("/api/users", userRoutes);

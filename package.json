@@ -12,6 +12,7 @@
     "dependencies": {
         "bcryptjs": "^2.4.3",
         "connect-redis": "^5.1.0",
+        "cookie-parser": "^1.4.5",
         "cookie-session": "^1.4.0",
         "dotenv": "^8.2.0",
         "email-templates": "^8.0.4",

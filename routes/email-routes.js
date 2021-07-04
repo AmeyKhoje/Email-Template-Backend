@@ -1,5 +1,5 @@
 const express = require("express");
-const { sendEmails, getAllEmailsSentByMe, makeEmailStarred, getAllEmailsReceivedByStudent, getAllEmailsReceivedByAdmin } = require("../controllers/emailController");
+const { sendEmails, getAllEmailsSentByMe, makeEmailStarred, getAllEmailsReceived } = require("../controllers/emailController");
 const { checkAuth } = require("../middlewares/check-auth");
 const { roleRoute } = require("../middlewares/role-route");
 
@@ -13,9 +13,9 @@ router.post("/send",checkAuth, sendEmails);
 router.get("/all", checkAuth, getAllEmailsSentByMe);
 
 // ? Get all received emails
-router.get("/student/received",  getAllEmailsReceivedByStudent);
+router.get("/student/received",  getAllEmailsReceived);
 
-router.get("/admin/received",  getAllEmailsReceivedByAdmin);
+router.get("/admin/received",  getAllEmailsReceived);
 
 // ? Make email starred
 router.patch("/starred", checkAuth, makeEmailStarred)
